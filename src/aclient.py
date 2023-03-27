@@ -40,7 +40,7 @@ class aclient(discord.Client):
             author = message.user.id
             await message.response.defer(ephemeral=self.isPrivate)
         else:
-            author = message.author.id
+            author = interaction.user.id
         try:
             response = (f'> **{user_message}** - <@{str(author)}' + '> \n\n')
             if self.chat_model == "OFFICIAL":
