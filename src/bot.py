@@ -5,6 +5,7 @@ from random import randrange
 from src.aclient import client
 from discord import app_commands
 from src import log, art, personas, responses
+from discord.ext import commands
 
 logger = log.setup_logger(__name__)
 
@@ -159,6 +160,18 @@ https://github.com/Zero6992/chatGPT-discord-bot""")
 
         logger.info(
             "\x1b[31mSomeone needs help!\x1b[0m")
+
+    @client.tree.command(name="grateful", description="Share something you're grateful for")
+    async def grateful(interaction: discord.Interaction, *, gratitude: str):
+        if interaction.user == client.user:
+            return
+        username = str(interaction.user)
+        channel = str(interaction.channel)
+        logger.info(f"\x1b[31m{username}\x1b[0m : /grateful [{gratitude}] in ({channel})")
+        response_message = f"{username} shared their gratitude: '{gratitude}'"
+        await interaction.response.defer(ephemeral=False)
+        await interaction.followup.send(response_message)
+
 
     @client.tree.command(name="draw", description="Generate an image with the Dalle2 model")
     async def draw(interaction: discord.Interaction, *, prompt: str):
