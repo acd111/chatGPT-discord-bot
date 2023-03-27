@@ -64,7 +64,7 @@ def run_discord_bot():
         client.replying_all_discord_channel_id = str(interaction.channel_id)
         await interaction.response.defer(ephemeral=False)
         if client.is_replying_all == "True":
-            client.is_replying_all = "False"
+            client.isReplyingAl = "False"
             await interaction.followup.send(
                 "> **Info: The bot will only response to the slash command `/chat` next. If you want to switch back to replyAll mode, use `/replyAll` again.**")
             logger.warning("\x1b[31mSwitch to normal mode\x1b[0m")
@@ -81,57 +81,53 @@ def run_discord_bot():
         app_commands.Choice(name="Ofiicial GPT-4.0", value="OFFICIAL-GPT4"),
         app_commands.Choice(name="Website ChatGPT-3.5", value="UNOFFICIAL"),
         app_commands.Choice(name="Website ChatGPT-4.0", value="UNOFFICIAL-GPT4"),
-        app_commands.Choice(name="Bard", value="Bard"),
     ])
 
     async def chat_model(interaction: discord.Interaction, choices: app_commands.Choice[str]):
         await interaction.response.defer(ephemeral=False)
-        original_chat_model = client.chat_model
-        original_openAI_gpt_engine = client.openAI_gpt_engine
-
-        try:
-            if choices.value == "OFFICIAL":
-                client.openAI_gpt_engine = "gpt-3.5-turbo"
-                client.chat_model = "OFFICIAL"
-            elif choices.value == "OFFICIAL-GPT4":
-                client.openAI_gpt_engine = "gpt-4"
-                client.chat_model = "OFFICIAL"
-            elif choices.value == "UNOFFICIAL":
-                client.openAI_gpt_engine = "gpt-3.5-turbo"
-                client.chat_model = "UNOFFICIAL"
-            elif choices.value == "UNOFFICIAL-GPT4":
-                client.openAI_gpt_engine = "gpt-4"
-                client.chat_model = "UNOFFICIAL"
-            elif choices.value == "Bard":
-                client.chat_model = "Bard"
-            else:
-                raise ValueError("Invalid choice")
-
+        if choices.value == "OFFICIAL":
+            client.openAI_gpt_engine = "gpt-3.5-turbo"
+            client.chat_model = "OFFICIAL"
             client.chatbot = client.get_chatbot_model()
-            await interaction.followup.send(f"> **Info: You are now in {client.chat_model} model.**\n")
-            logger.warning(f"\x1b[31mSwitch to {client.chat_model} model\x1b[0m")
-
-        except Exception as e:
-            client.chat_model = original_chat_model
-            client.openAI_gpt_engine = original_openAI_gpt_engine
+            await interaction.followup.send(
+                "> **Info: You are now in Official GPT-3.5 model.**\n")
+            logger.warning("\x1b[31mSwitch to OFFICIAL GPT-3.5 model\x1b[0m")
+        elif choices.value == "OFFICIAL-GPT4":
+            client.openAI_gpt_engine = "gpt-4"
+            client.chat_model = "OFFICIAL"
             client.chatbot = client.get_chatbot_model()
-            await interaction.followup.send(f"> **Error: Error while switching to the {choices.value} model, check that you've filled in the related fields in `.env`.**\n")
-            logger.exception(f"Error while switching to the {choices.value} model: {e}")
+            await interaction.followup.send(
+                "> **Info: You are now in Official GPT-4.0 model.**\n")
+            logger.warning("\x1b[31mSwitch to OFFICIAL GPT-4.0 model\x1b[0m")
+        elif choices.value == "UNOFFICIAL":
+            client.openAI_gpt_engine = "gpt-3.5-turbo"
+            client.chat_model = "UNOFFICIAL"
+            client.chatbot = client.get_chatbot_model()
+            await interaction.followup.send(
+                "> **Info: You are now in Website ChatGPT-3.5 model.**\n")
+            logger.warning("\x1b[31mSwitch to UNOFFICIAL(Website) GPT-3.5 model\x1b[0m")
+        elif choices.value == "UNOFFICIAL-GPT4":
+            client.openAI_gpt_engine = "gpt-4"
+            client.chat_model = "UNOFFICIAL"
+            client.chatbot = client.get_chatbot_model()
+            await interaction.followup.send(
+                "> **Info: You are now in Website ChatGPT-4.0 model.**\n")
+            logger.warning("\x1b[31mSwitch to UNOFFICIAL(Website) GPT-4.0 model\x1b[0m")
 
 
-    @client.tree.command(name="reset", description="Complete reset conversation history")
+    @client.tree.command(name="reset", description="Complete reset ChatGPT conversation history")
     async def reset(interaction: discord.Interaction):
         if client.chat_model == "OFFICIAL":
             client.chatbot.reset()
         elif client.chat_model == "UNOFFICIAL":
             client.chatbot.reset_chat()
-        elif client.chat_model == "Bard":
-            client.chatbot = client.get_chatbot_model()
         await interaction.response.defer(ephemeral=False)
         await interaction.followup.send("> **Info: I have forgotten everything.**")
         personas.current_persona = "standard"
         logger.warning(
             "\x1b[31mChatGPT bot has been successfully reset\x1b[0m")
+        await client.send_start_prompt()
+
 
     @client.tree.command(name="help", description="Show help for the bot")
     async def help(interaction: discord.Interaction):
@@ -156,7 +152,7 @@ def run_discord_bot():
         - `/chat-model` Switch different chat model
                 `OFFICIAL`: GPT-3.5 model
                 `UNOFFICIAL`: Website ChatGPT
-                `Bard`: Google Bard model
+                Modifying CHAT_MODEL field in the .env file change the default model
 
 For complete documentation, please visit:
 https://github.com/Zero6992/chatGPT-discord-bot""")
@@ -206,13 +202,15 @@ https://github.com/Zero6992/chatGPT-discord-bot""")
         app_commands.Choice(name="Evil Confidant", value="confidant"),
         app_commands.Choice(name="BasedGPT v2", value="based"),
         app_commands.Choice(name="OPPO", value="oppo"),
-        app_commands.Choice(name="Developer Mode v2", value="dev"),
-        app_commands.Choice(name="DUDE V3", value="dude_v3"),
-        app_commands.Choice(name="AIM", value="aim"),
-        app_commands.Choice(name="UCAR", value="ucar"),
-        app_commands.Choice(name="Jailbreak", value="jailbreak")
+        app_commands.Choice(name="Developer Mode v2", value="dev")
     ])
-    async def switchpersona(interaction: discord.Interaction, persona: app_commands.Choice[str]):
+    async def chat(interaction: discord.Interaction, persona: app_commands.Choice[str]):
+        if client.is_replying_all == "True":
+            await interaction.response.defer(ephemeral=False)
+            await interaction.followup.send(
+                "> **Warn: You already on replyAll mode. If you want to use slash command, switch to normal mode, use `/replyall` again**")
+            logger.warning("\x1b[31mYou already on replyAll mode, can't use slash command!\x1b[0m")
+            return
         if interaction.user == client.user:
             return
 
@@ -232,8 +230,6 @@ https://github.com/Zero6992/chatGPT-discord-bot""")
                 client.chatbot.reset()
             elif client.chat_model == "UNOFFICIAL":
                 client.chatbot.reset_chat()
-            elif client.chat_model == "Bard":
-                client.chat_model = client.get_chatbot_model()
 
             personas.current_persona = "standard"
             await interaction.followup.send(
@@ -278,8 +274,6 @@ https://github.com/Zero6992/chatGPT-discord-bot""")
                     channel = str(message.channel)
                     logger.info(f"\x1b[31m{username}\x1b[0m : '{user_message}' ({channel})")
                     await client.send_message(message, user_message)
-            else:
-                logger.exception("replying_all_discord_channel_id not found, please use the commnad `/replyall` again.")
 
     TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
